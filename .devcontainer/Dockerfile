@@ -59,9 +59,14 @@ RUN curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/in
     echo 'export PATH=$PATH:$HOME/.local/bin' >>~/.zshrc
 
 # Install Python dependencies listed in requirements.txt (placed at project root)
+RUN python3 -m .venv
+RUN source .venv/bin/activate
+
 COPY requirements.txt /workspace/requirements.txt
 RUN python3 -m pip install --upgrade pip && \
     python3 -m pip install -r /workspace/requirements.txt
+
+RUN echo 'alias python=python3' >>~/.zshrc
 
 # Set the workspace folder for vscode
 WORKDIR /workspace

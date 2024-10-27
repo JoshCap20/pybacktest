@@ -1,6 +1,8 @@
 import logging
 import pandas as pd
 
+
+from .utils import export_to_json
 from .data_series import DataSeries
 from ..strategies.strategy import Strategy
 from ..indicators.indicator import Indicator
@@ -48,17 +50,13 @@ class DataFeed(object):
         Iterate over each row in the DataFrame, testing each strategy.
         """
         if self._current_index >= len(self._data):
-            logger.debug("Data feed iteration complete.")
-            raise StopIteration
+            self.end()
 
         row = self._data.iloc[self._current_index]
         data_series = DataSeries(row)
         self._current_index += 1
 
-        [
-            strategy.apply(data_series)
-            for strategy in self._subscribers
-        ]
+        [strategy.apply(data_series) for strategy in self._subscribers]
 
         return row
 
@@ -85,3 +83,11 @@ class DataFeed(object):
         for indicator in indicators:
             indicator.apply(self._data)
             logger.debug(f"Applied indicator {indicator} to the data feed.")
+
+    def end(self) -> None:
+        """
+        Ends the data feed iteration.
+        """
+        logger.debug("Data feed iteration complete.")
+        export_to_json(self._data)
+        raise StopIteration

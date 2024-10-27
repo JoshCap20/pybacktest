@@ -10,6 +10,7 @@ from .adx import ADXIndicator
 from .fibonacci_retracement import FibonacciRetracementLevels
 from .obv import OBVIndicator
 from .vwamp import VWAPIndicator
+from .keltner_channels import KeltnerChannels
 
 __all__ = [
     "EMAIndicator",
@@ -24,4 +25,5 @@ __all__ = [
     "FibonacciRetracementLevels",
     "OBVIndicator",
     "VWAPIndicator",
+    "KeltnerChannels",
 ]
