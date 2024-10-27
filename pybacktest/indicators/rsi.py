@@ -1,0 +1,21 @@
+import pandas as pd
+
+from .indicator import Indicator
+
+
+class RSIIndicator(Indicator):
+    def __init__(self, window: int = 14, column: str = "Close"):
+        self.window = window
+        self.column = column
+
+    def apply(self, data: pd.DataFrame) -> None:
+        for symbol in data.columns.get_level_values(0).unique():
+            delta = data[(symbol, self.column)].diff()
+            gain = delta.where(delta.astype(float) > 0, 0.0)
+            loss = -delta.where(delta.astype(float) < 0, 0.0)
+
+            avg_gain = gain.rolling(window=self.window, min_periods=self.window).mean()
+            avg_loss = loss.rolling(window=self.window, min_periods=self.window).mean()
+
+            rs = avg_gain / avg_loss
+            data[(symbol, f"RSI_{self.window}")] = 100 - (100 / (1 + rs))

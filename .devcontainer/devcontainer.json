@@ -1,0 +1,39 @@
+{
+  "dockerComposeFile": "docker-compose.yml",
+  "workspaceFolder": "/workspace",
+  "service": "pybacktest",
+  "remoteUser": "vscode",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "ms-python.black-formatter",
+        "GitHub.vscode-pull-request-github",
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode"
+      ],
+      "settings": {
+        "editor.formatOnSave": true,
+        "editor.formatOnSaveMode": "file",
+        "[python]": {
+          "editor.defaultFormatter": "ms-python.black-formatter",
+          "python.formatting.blackArgs": ["--line-length", "120"]
+        },
+        "python.analysis.extraPaths": ["/backend/"],
+        "python.testing.pytestEnabled": true,
+        "python.testing.unittestEnabled": false,
+        "python.linting.flake8Enabled": true,
+        "python.linting.pylintEnabled": true,
+        "python.linting.flake8Args": ["--max-line-length=120"],
+        "python.linting.pylintArgs": ["--max-line-length=120"],
+        "python.analysis.diagnosticSeverityOverrides": {
+          "reportMissingParameterType": "error",
+          "reportGeneralTypeIssues": "error",
+          "reportDeprecated": "error",
+          "reportImportCycles": "error"
+        }
+      }
+    }
+  }
+}
