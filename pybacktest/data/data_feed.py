@@ -1,6 +1,9 @@
 import logging
 import pandas as pd
-from .strategy import Strategy
+
+from .data_series import DataSeries
+from ..strategies.strategy import Strategy
+from ..indicators.indicator import Indicator
 
 """
 DataFeed is a custom iterator over a pandas DataFrame. Each iteration runs a test on subscriber predicates by calling their test method.
@@ -8,7 +11,7 @@ DataFeed is a custom iterator over a pandas DataFrame. Each iteration runs a tes
 Basically, a wrapper around a pandas DataFrame, an iterator, and a subject/observer pattern.
 """
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+logger.setLevel(logging.DEBUG)
 logger.addHandler(logging.StreamHandler())
 logger.propagate = False
 
@@ -24,14 +27,14 @@ class DataFeed(object):
         self._data = data
         self._subscribers = []
         self._current_index = 0
-        logging.debug(f"Data feed initialized with {len(data)} rows.")
+        logger.debug(f"Data feed initialized with {len(data)} rows.")
 
     def subscribe(self, strategy: Strategy) -> None:
         """
         Attaches a strategy to the data feed.
         """
         self._subscribers.append(strategy)
-        logging.debug(f"Strategy {strategy} attached to the data feed.")
+        logger.debug(f"Strategy {strategy} attached to the data feed.")
 
     def __iter__(self):
         """
@@ -45,17 +48,17 @@ class DataFeed(object):
         Iterate over each row in the DataFrame, testing each strategy.
         """
         if self._current_index >= len(self._data):
-            logging.info("Data feed iteration complete.")
+            logger.debug("Data feed iteration complete.")
             raise StopIteration
 
         row = self._data.iloc[self._current_index]
+        data_series = DataSeries(row)
         self._current_index += 1
 
-        for strategy in self._subscribers:
-            logging.debug(f"Testing strategy {strategy} on row {row.name}")
-            if strategy.test(row):
-                logging.debug(f"Strategy {strategy} triggered on row {row.name}")
-                strategy.apply(row)
+        [
+            strategy.apply(data_series)
+            for strategy in self._subscribers
+        ]
 
         return row
 
@@ -66,11 +69,19 @@ class DataFeed(object):
         Automatically calls all strategies for all rows via iterator override.
         """
         if not self._subscribers:
-            logging.warning("No subscribers attached to the data feed.")
+            logger.warning("No subscribers attached to the data feed.")
 
         if self._data.empty:
-            logging.error(f"No data in the data feed\nData: {self._data}")
+            logger.error(f"No data in the data feed\nData: {self._data}")
             return
 
         for _ in self:
             pass
+
+    def add_indicators(self, indicators: list[Indicator]) -> None:
+        """
+        Applies an indicator to the data series.
+        """
+        for indicator in indicators:
+            indicator.apply(self._data)
+            logger.debug(f"Applied indicator {indicator} to the data feed.")
