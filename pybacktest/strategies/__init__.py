@@ -1,7 +1,7 @@
 from .strategy import Strategy
-from .predicate_filter import PredicateFilter
+from .base import BaseObserver
 
 __all__ = [
     "Strategy",
-    "PredicateFilter",
+    "BaseObserver",
 ]
