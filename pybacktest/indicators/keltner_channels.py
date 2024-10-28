@@ -4,7 +4,10 @@ from .indicator import Indicator
 
 
 class KeltnerChannels(Indicator):
-    def __init__(self, window: int = 20, multiplier: float = 2, column: str = "Close"):
+
+    def __init__(
+        self, window: int = 20, multiplier: float = 2, column: str = "Adj Close"
+    ):
         super().__init__()
         self.window = window
         self.multiplier = multiplier

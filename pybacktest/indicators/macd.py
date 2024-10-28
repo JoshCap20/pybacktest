@@ -4,12 +4,13 @@ from .indicator import Indicator
 
 
 class MACDIndicator(Indicator):
+
     def __init__(
         self,
         short_window: int = 12,
         long_window: int = 26,
         signal_window: int = 9,
-        column: str = "Close",
+        column: str = "Adj Close",
     ):
         super().__init__()
         self.short_window = short_window

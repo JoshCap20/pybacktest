@@ -5,7 +5,7 @@ from .indicator import Indicator
 
 class VWAPIndicator(Indicator):
 
-    def init(self, column: str = "Close"):
+    def init(self, column: str = "Adj Close"):
         super().__init__()
         self.column = column
         self.indicator_name = "VWAP"

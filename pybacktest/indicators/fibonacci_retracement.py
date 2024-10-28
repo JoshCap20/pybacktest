@@ -4,7 +4,8 @@ from .indicator import Indicator
 
 
 class FibonacciRetracementLevels(Indicator):
-    def __init__(self, column: str = "Close"):
+
+    def __init__(self, column: str = "Adj Close"):
         super().__init__()
         self.column = column
         self.column_names = ["Fib_23.6%", "Fib_38.2%", "Fib_50%", "Fib_61.8%"]

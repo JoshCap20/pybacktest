@@ -17,16 +17,30 @@ logger.propagate = False
 
 
 class DataFeed(object):
-    __slots__ = ["_current_index", "_data", "_subscribers"]
+    __slots__ = [
+        "_current_index",
+        "_data",
+        "_subscribers",
+        "start_date",
+        "end_date",
+        "symbols",
+    ]
 
     _current_index: int
     _data: pd.DataFrame
     _subscribers: list[Strategy]
+    start_date: pd.Timestamp
+    end_date: pd.Timestamp
 
     def __init__(self, data: pd.DataFrame):
         self._data = data
         self._subscribers = []
         self._current_index = 0
+        self.start_date = data.index[0]
+        self.end_date = data.index[-1]
+        self.symbols = (
+            data.columns.get_level_values(0).unique().to_flat_index().tolist()
+        )
         logger.debug(f"Data feed initialized with {len(data)} rows.")
 
     def subscribe(self, strategy: Strategy) -> None:

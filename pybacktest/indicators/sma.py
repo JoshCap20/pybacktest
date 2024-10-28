@@ -3,7 +3,8 @@ import pandas as pd
 
 
 class SMAIndicator(Indicator):
-    def __init__(self, window: int, column: str = "Close"):
+
+    def __init__(self, window: int, column: str = "Adj Close"):
         super().__init__()
         self.window = window
         self.column = column
