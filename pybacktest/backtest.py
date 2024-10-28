@@ -68,6 +68,11 @@ class Backtest(object):
         os.makedirs("backtest_runs", exist_ok=True)
         run_filename = f"backtest_runs/run_{results['run_id']}.json"
 
+        data = self._data_feed._data.copy()
+        data.columns = ["_".join(map(str, col)).strip() for col in data.columns.values]
+        data = data.replace([np.nan, np.inf, -np.inf], None)
+        results["data"] = data.to_dict(orient="records")
+
         with open(run_filename, "w") as f:
             json.dump(results, f, cls=NumpyEncoder, indent=4)
 
@@ -130,13 +135,16 @@ class NumpyEncoder(json.JSONEncoder):
     """Custom encoder for numpy data types and datetime objects."""
 
     def default(self, obj):
-        if isinstance(obj, np.integer):
+        if isinstance(obj, (np.integer, np.int64, np.int32)):
             return int(obj)
-        elif isinstance(obj, np.floating):
-            return float(obj)
-        elif isinstance(obj, np.ndarray):
-            return obj.tolist()
-        elif isinstance(obj, datetime):
-            return obj.isoformat()
+        elif isinstance(obj, (np.floating, np.float64, np.float32)):
+            if np.isnan(obj) or np.isinf(obj):
+                return None
+            else:
+                return float(obj)
+        elif isinstance(obj, (np.ndarray, list)):
+            return [None if (pd.isnull(x) or np.isinf(x)) else x for x in obj]
+        elif isinstance(obj, (datetime, np.datetime64)):
+            return str(obj)
         else:
             return super(NumpyEncoder, self).default(obj)
