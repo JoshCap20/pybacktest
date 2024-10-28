@@ -14,25 +14,29 @@ class Portfolio:
         self.positions = {}  # symbol -> quantity
         self.transaction_history = []  # List of transaction records
 
-    def buy(self, symbol: str, quantity: float, price: float) -> None:
+    def buy(
+        self, symbol: str, quantity: float, price: float, timestamp: datetime
+    ) -> None:
         total_cost = quantity * price * (1 + self.brokerage_fee)
         if self.cash >= total_cost:
             self.cash -= total_cost
             self.positions[symbol] = self.positions.get(symbol, 0) + quantity
-            self.record_transaction("buy", symbol, quantity, price)
+            self.record_transaction("buy", symbol, quantity, price, timestamp)
             logger.info(f"Bought {quantity} shares of {symbol} at {price}")
         else:
             logger.warning(
                 f"Insufficient funds to buy {quantity} shares of {symbol} at {price}"
             )
 
-    def sell(self, symbol: str, quantity: float, price: float) -> None:
+    def sell(
+        self, symbol: str, quantity: float, price: float, timestamp: datetime
+    ) -> None:
         current_position = self.positions.get(symbol, 0)
         if current_position >= quantity:
             total_proceeds = quantity * price * (1 - self.brokerage_fee)
             self.cash += total_proceeds
             self.positions[symbol] -= quantity
-            self.record_transaction("sell", symbol, quantity, price)
+            self.record_transaction("sell", symbol, quantity, price, timestamp)
             logger.info(f"Sold {quantity} shares of {symbol} at {price}")
         else:
             logger.warning(
@@ -43,14 +47,19 @@ class Portfolio:
         return self.positions.get(symbol, 0)
 
     def record_transaction(
-        self, transaction_type: str, symbol: str, quantity: float, price: float
+        self,
+        transaction_type: str,
+        symbol: str,
+        quantity: float,
+        price: float,
+        timestamp: datetime,
     ):
         transaction = {
             "type": transaction_type,
             "symbol": symbol,
             "quantity": quantity,
             "price": price,
-            "timestamp": datetime.now(),
+            "timestamp": timestamp,
             "cash_balance": self.cash,
         }
         self.transaction_history.append(transaction)

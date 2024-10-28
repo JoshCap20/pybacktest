@@ -19,15 +19,16 @@ class Action:
         # TODO: refactor this to access the data in a more generic way
         symbol = context["symbol"]
         price = data["Close"]
+        timestamp = context["timeframe"]
 
         order: Order | None = None
         amount: float = 0.0
         if self.action_type == "Buy":
             amount = self.calculate_quantity(portfolio, price)
-            order = Order(symbol, amount, price, "buy")
+            order = Order(symbol, amount, price, "buy", timestamp)
         elif self.action_type == "Sell":
             amount = portfolio.get_position(symbol)
-            order = Order(symbol, amount, price, "sell")
+            order = Order(symbol, amount, price, "sell", timestamp)
         else:
             raise ValueError(f"Unknown action type: {self.action_type}")
 

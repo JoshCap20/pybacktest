@@ -12,9 +12,11 @@ class BuyAction(Action):
     def execute(self, data: pd.Series, context: dict) -> None:
         portfolio: Portfolio = context["portfolio"]
         symbol = context["symbol"]
+        timeframe = context["timeframe"]
         price = data["Close"]
+
         quantity = self.calculate_quantity(portfolio, price)
         if quantity > 0:
-            order = Order(symbol, quantity, price, "buy")
+            order = Order(symbol, quantity, price, "buy", timeframe)
             order.execute(portfolio)
             self.log_action(symbol, quantity, price)

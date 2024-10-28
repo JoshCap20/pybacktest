@@ -1,20 +1,28 @@
 from datetime import datetime
+
 from ..portfolio import Portfolio
 
 
 class Order(object):
-    def __init__(self, symbol: str, quantity: float, price: float, order_type: str):
+    def __init__(
+        self,
+        symbol: str,
+        quantity: float,
+        price: float,
+        order_type: str,
+        timestamp: datetime,
+    ):
         self.symbol = symbol
         self.quantity = quantity
         self.price = price
         self.order_type = order_type  # 'buy' or 'sell'
-        self.timestamp = datetime.now()
+        self.timestamp = timestamp
 
     def execute(self, portfolio: Portfolio):
         if self.order_type == "buy":
-            portfolio.buy(self.symbol, self.quantity, self.price)
+            portfolio.buy(self.symbol, self.quantity, self.price, self.timestamp)
         elif self.order_type == "sell":
-            portfolio.sell(self.symbol, self.quantity, self.price)
+            portfolio.sell(self.symbol, self.quantity, self.price, self.timestamp)
         else:
             raise ValueError(f"Invalid order type: {self.order_type}")
 

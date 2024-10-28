@@ -28,6 +28,12 @@ class DataSeries(object):
         except KeyError:
             raise KeyError(f"Column '{column}' for symbol '{symbol}' does not exist.")
 
+    def get_date_index(self):
+        """
+        Returns the date index for this timeframe.
+        """
+        return self.row.name
+
     def get_all(self, symbol: str) -> pd.Series:
         """
         Returns all values for a specific stock at this timeframe.

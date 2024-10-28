@@ -19,6 +19,8 @@ class Strategy:
         self.exit_action = exit_action
 
     def apply(self, data: DataSeries, context: dict) -> None:
+        context["timeframe"] = data.get_date_index()
+
         for symbol in data.all_symbols():
             symbol_data: pd.Series = data.get_all(symbol)
             context["symbol"] = symbol

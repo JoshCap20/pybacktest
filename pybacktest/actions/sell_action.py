@@ -13,9 +13,12 @@ class SellAction(Action):
         portfolio: Portfolio = context["portfolio"]
         symbol = context["symbol"]
         price = data["Close"]
+        timeframe = context["timeframe"]
+
         quantity = portfolio.get_position(symbol)
+
         # TODO: Does not support short selling currently
         if quantity > 0:
-            order = Order(symbol, quantity, price, "sell")
+            order = Order(symbol, quantity, price, "sell", timeframe)
             order.execute(portfolio)
             self.log_action(symbol, quantity, price)

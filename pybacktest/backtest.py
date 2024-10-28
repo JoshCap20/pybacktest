@@ -11,6 +11,7 @@ from datetime import datetime
 from .data import DataFeed
 from .portfolio import Portfolio
 from .plot.results_plot import plot_backtest
+from .data.utils import export_to_json
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -46,6 +47,10 @@ class Backtest(object):
 
         final_prices = self.get_final_prices()
         performance_metrics = self.calculate_performance(final_prices)
+        total_portfolio_value = self._portfolio.total_portfolio_value(final_prices)
+        roi = (
+            total_portfolio_value - self._portfolio.initial_cash
+        ) / self._portfolio.initial_cash
         logger.info("Backtest completed.")
 
         # Prepare results dictionary
@@ -54,9 +59,8 @@ class Backtest(object):
             "timestamp": datetime.now().isoformat(),
             "initial_balance": self._portfolio.initial_cash,
             "final_balance": self._portfolio.cash,
-            "total_portfolio_value": self._portfolio.total_portfolio_value(
-                final_prices
-            ),
+            "total_portfolio_value": total_portfolio_value,
+            "roi": roi,
             # "total_return": performance_metrics.get("total_return"),
             # "symbols": self._data_feed.symbols,
             # "date_range": {"start": self._data_feed.start, "end": self._data_feed.end},
@@ -72,8 +76,13 @@ class Backtest(object):
         run_filepath = f"backtest_runs/run_{results['run_id']}"
 
         data = self._data_feed._data.copy()
+        print(data)
         data.columns = ["_".join(map(str, col)).strip() for col in data.columns.values]
         data = data.replace([np.nan, np.inf, -np.inf], None)
+        data.reset_index(inplace=True)
+        data["Date"] = data["Date"].apply(
+            lambda x: x.isoformat() if isinstance(x, datetime) else x
+        )
         results["data"] = data.to_dict(orient="records")
         results["performance"] = self.get_results()
 
@@ -81,8 +90,13 @@ class Backtest(object):
         with open(f"{run_filepath}/backtest.json", "w") as f:
             json.dump(results, f, cls=NumpyEncoder, indent=4)
 
+        export_to_json(self._data_feed._data, run_filepath)
         plot_backtest(self._data_feed._data, run_filepath)
         logger.info(f"Run saved as {run_filepath}")
+
+        print(f"Total Portfolio Value: ${results['total_portfolio_value']:.2f}")
+        print(f"Final Cash: ${results['final_balance']:.2f}")
+        print(f"Return on Investment: {roi:.2%}")
 
     def buy(self, symbol: str, amount: float, price: float) -> None:
         self._portfolio.buy(symbol, amount, price)
@@ -95,7 +109,6 @@ class Backtest(object):
         total_return = (
             total_portfolio_value - self._portfolio.initial_cash
         ) / self._portfolio.initial_cash
-        logger.info(f"Total Return: {total_return * 100:.2f}%")
 
     # Implement additional metrics like Sharpe ratio, drawdowns, etc.
 
