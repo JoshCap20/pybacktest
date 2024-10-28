@@ -8,6 +8,9 @@ class RSIIndicator(Indicator):
         self.window = window
         self.column = column
 
+        self.indicator_name = f"RSI_{self.window}"
+        self.column_names.append(self.indicator_name)
+
     def apply(self, data: pd.DataFrame) -> None:
         for symbol in data.columns.get_level_values(0).unique():
             delta = data[(symbol, self.column)].diff()
@@ -18,4 +21,4 @@ class RSIIndicator(Indicator):
             avg_loss = loss.rolling(window=self.window, min_periods=self.window).mean()
 
             rs = avg_gain / avg_loss
-            data[(symbol, f"RSI_{self.window}")] = 100 - (100 / (1 + rs))
+            data[(symbol, self.indicator_name)] = 100 - (100 / (1 + rs))

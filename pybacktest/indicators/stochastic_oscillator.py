@@ -8,6 +8,11 @@ class StochasticOscillator(Indicator):
         self.k_window = k_window
         self.d_window = d_window
 
+        self.stochastic_k_name = f"%K_{self.k_window}"
+        self.stochastic_d_name = f"%D_{self.d_window}"
+
+        self.column_names.extend([self.stochastic_k_name, self.stochastic_d_name])
+
     def apply(self, data: pd.DataFrame) -> None:
         for symbol in data.columns.get_level_values(0).unique():
             low_min = data[(symbol, "Low")].rolling(window=self.k_window).min()
@@ -16,7 +21,7 @@ class StochasticOscillator(Indicator):
                 (data[(symbol, "Close")] - low_min) / (high_max - low_min)
             )
 
-            data[(symbol, f"%K_{self.k_window}")] = k_percent
-            data[(symbol, f"%D_{self.d_window}")] = k_percent.rolling(
+            data[(symbol, self.stochastic_k_name)] = k_percent
+            data[(symbol, self.stochastic_d_name)] = k_percent.rolling(
                 window=self.d_window
             ).mean()

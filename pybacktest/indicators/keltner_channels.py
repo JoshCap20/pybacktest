@@ -9,6 +9,14 @@ class KeltnerChannels(Indicator):
         self.multiplier = multiplier
         self.column = column
 
+        self.keltner_upper_name = f"Keltner_Upper_{self.window}"
+        self.keltner_lower_name = f"Keltner_Lower_{self.window}"
+        self.keltner_center_name = f"Keltner_Center_{self.window}"
+
+        self.column_names.extend(
+            [self.keltner_upper_name, self.keltner_lower_name, self.keltner_center_name]
+        )
+
     def apply(self, data: pd.DataFrame) -> None:
         # TODO: Add validation that ATR window is same as Keltner window
         for symbol in data.columns.get_level_values(0).unique():
@@ -28,10 +36,6 @@ class KeltnerChannels(Indicator):
                         break
 
             if atr is not None:
-                data[(symbol, f"Keltner_Upper_{self.window}")] = (
-                    ema + self.multiplier * atr
-                )
-                data[(symbol, f"Keltner_Lower_{self.window}")] = (
-                    ema - self.multiplier * atr
-                )
-            data[(symbol, f"Keltner_Center_{self.window}")] = ema
+                data[(symbol, self.keltner_upper_name)] = ema + self.multiplier * atr
+                data[(symbol, self.keltner_lower_name)] = ema - self.multiplier * atr
+            data[(symbol, self.keltner_center_name)] = ema

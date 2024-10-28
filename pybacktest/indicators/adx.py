@@ -7,6 +7,8 @@ from .indicator import Indicator
 class ADXIndicator(Indicator):
     def __init__(self, window: int = 14):
         self.window = window
+        self.indicator_name = f"ADX_{self.window}"
+        self.column_names.append(self.indicator_name)
 
     def apply(self, data: pd.DataFrame) -> None:
         for symbol in data.columns.get_level_values(0).unique():
@@ -31,4 +33,4 @@ class ADXIndicator(Indicator):
             dx = 100 * abs(plus_di - minus_di) / (plus_di + minus_di)
             adx = dx.rolling(window=self.window).mean()
 
-            data[(symbol, f"ADX_{self.window}")] = adx
+            data[(symbol, self.indicator_name)] = adx
