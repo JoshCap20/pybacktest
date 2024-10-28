@@ -1,7 +1,13 @@
+import json
+import uuid
+import numpy as np
+from datetime import datetime
+import logging
+import os
+
 from .data import DataFeed
 from .portfolio import Portfolio
-
-import logging
+from .plot.results_plot import plot_backtest
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -14,13 +20,6 @@ class Backtest(object):
         self._data_feed = data_feed
         self._portfolio = Portfolio(initial_balance)
         self._context = {"portfolio": self._portfolio}
-
-    def run(self) -> None:
-        for data in self._data_feed:
-            context = self._context.copy()
-            context["data_feed"] = self._data_feed
-            for strategy in self._data_feed._subscribers:
-                strategy.apply(data, context)
 
     def run(self) -> None:
         """
@@ -42,6 +41,38 @@ class Backtest(object):
             for strategy in self._data_feed._subscribers:
                 strategy.apply(data_series, context)
 
+        final_prices = self.get_final_prices()
+        performance_metrics = self.calculate_performance(final_prices)
+        logger.info("Backtest completed.")
+
+        # Prepare results dictionary
+        results = {
+            "run_id": str(uuid.uuid4()),
+            "timestamp": datetime.now().isoformat(),
+            "initial_balance": self._portfolio.initial_cash,
+            "final_balance": self._portfolio.cash,
+            "total_portfolio_value": self._portfolio.total_portfolio_value(
+                final_prices
+            ),
+            # "total_return": performance_metrics.get("total_return"),
+            # "symbols": self._data_feed.symbols,
+            # "date_range": {"start": self._data_feed.start, "end": self._data_feed.end},
+            "strategy": [
+                strategy.as_dict() for strategy in self._data_feed._subscribers
+            ],
+            "transaction_history": self._portfolio.transaction_history,
+            "final_positions": self._portfolio.positions,
+            "data_hash": hash(self._data_feed._data.to_csv()),
+        }
+
+        os.makedirs("backtest_runs", exist_ok=True)
+        run_filename = f"backtest_runs/run_{results['run_id']}.json"
+
+        with open(run_filename, "w") as f:
+            json.dump(results, f, cls=NumpyEncoder, indent=4)
+
+        logger.info(f"Results saved to {run_filename}")
+
     def buy(self, symbol: str, amount: float, price: float) -> None:
         self._portfolio.buy(symbol, amount, price)
 
@@ -55,7 +86,7 @@ class Backtest(object):
         ) / self._portfolio.initial_cash
         logger.info(f"Total Return: {total_return * 100:.2f}%")
 
-        # Implement additional metrics like Sharpe ratio, drawdowns, etc.
+    # Implement additional metrics like Sharpe ratio, drawdowns, etc.
 
     def get_final_prices(self) -> dict:
         # Extract final prices from the data feed
@@ -69,23 +100,8 @@ class Backtest(object):
     def get_final_portfolio(self) -> Portfolio:
         return self._portfolio
 
-    def get_final_balance(self) -> float:
-        return self._portfolio.balance
-
     def get_final_positions(self) -> dict:
         return self._portfolio.positions
-
-    def get_final_value(self) -> float:
-        return self._portfolio.balance + sum(self._portfolio.positions.values())
-
-    def get_final_profit(self) -> float:
-        return self.get_final_value() - self._portfolio.balance
-
-    def get_final_roi(self) -> float:
-        return self.get_final_profit() / self._portfolio.balance
-
-    def get_final_roi_pct(self) -> float:
-        return self.get_final_roi() * 100
 
     def get_final_positions_value(self, price_data: dict) -> float:
         return sum(
@@ -95,22 +111,32 @@ class Backtest(object):
             ]
         )
 
-    def get_final_positions_roi(self, price_data: dict) -> float:
-        return self.get_final_positions_value(price_data) - self._portfolio.balance
-
-    def get_final_positions_roi_pct(self, price_data: dict) -> float:
-        return self.get_final_positions_roi(price_data) / self._portfolio.balance * 100
-
-    def get_final_positions_roi_per_symbol(self, price_data: dict) -> dict:
+    def get_results(self):
         return {
-            symbol: amount * price_data[symbol] - self._portfolio.balance
-            for symbol, amount in self._portfolio.positions.items()
+            "performance": {
+                "total_return": self.calculate_performance(self.get_final_prices()),
+                "initial_cash": self._portfolio.initial_cash,
+                "final_cash": self._portfolio.cash,
+                "final_positions": self.get_final_positions(),
+                "final_positions_value": self.get_final_positions_value(
+                    self.get_final_prices()
+                ),
+            },
+            "portfolio": self._portfolio.__dict__,
         }
 
-    def get_final_positions_roi_pct_per_symbol(self, price_data: dict) -> dict:
-        return {
-            symbol: (amount * price_data[symbol] - self._portfolio.balance)
-            / self._portfolio.balance
-            * 100
-            for symbol, amount in self._portfolio.positions.items()
-        }
+
+class NumpyEncoder(json.JSONEncoder):
+    """Custom encoder for numpy data types and datetime objects."""
+
+    def default(self, obj):
+        if isinstance(obj, np.integer):
+            return int(obj)
+        elif isinstance(obj, np.floating):
+            return float(obj)
+        elif isinstance(obj, np.ndarray):
+            return obj.tolist()
+        elif isinstance(obj, datetime):
+            return obj.isoformat()
+        else:
+            return super(NumpyEncoder, self).default(obj)

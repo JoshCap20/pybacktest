@@ -4,7 +4,9 @@ from ..indicators.indicator import Indicator
 
 
 class IndicatorInput:
-    def __init__(self, source, percentage=False, column_name=None):
+    def __init__(
+        self, source, percentage: bool = False, column_name: str | None = None
+    ):
         """
         :param source: Either an Indicator object, a column name (string), or a numeric value.
         :param percentage: If true, treats the value as a percentage of the indicator.
@@ -30,3 +32,6 @@ class IndicatorInput:
         else:
             base_value = self.source
         return base_value * 0.01 if self.percentage else base_value
+
+    def __str__(self):
+        return str(self.source)

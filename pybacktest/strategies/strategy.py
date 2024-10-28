@@ -29,3 +29,11 @@ class Strategy:
 
     def __str__(self):
         return f"{self.__class__.__name__} with {len(self.entry_conditions)} entry conditions and {len(self.exit_conditions)} exit conditions"
+
+    def as_dict(self) -> dict:
+        return {
+            "entry_conditions": [str(cond) for cond in self.entry_conditions],
+            "entry_action": str(self.entry_action),
+            "exit_conditions": [str(cond) for cond in self.exit_conditions],
+            "exit_action": str(self.exit_action),
+        }

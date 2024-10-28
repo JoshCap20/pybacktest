@@ -43,3 +43,6 @@ class Action:
 
     def log_action(self, symbol: str, amount: float, price: float):
         logger.info(f"{self.action_type} {amount} shares of {symbol} at {price}")
+
+    def __str__(self):
+        return self.action_type

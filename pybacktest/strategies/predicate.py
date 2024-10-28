@@ -47,3 +47,6 @@ class Predicate:
             raise ValueError(
                 "Predicate requires either a second input or a threshold for comparison."
             )
+
+    def __str__(self):
+        return f"{self.input1} {self.operator.__name__} {self.input2 or self.threshold}"
