@@ -56,25 +56,7 @@ class DataFeed(object):
         data_series = DataSeries(row)
         self._current_index += 1
 
-        [strategy.apply(data_series) for strategy in self._subscribers]
-
-        return row
-
-    def run(self) -> None:
-        """
-        Runs the data feed to completion.
-
-        Automatically calls all strategies for all rows via iterator override.
-        """
-        if not self._subscribers:
-            logger.warning("No subscribers attached to the data feed.")
-
-        if self._data.empty:
-            logger.error(f"No data in the data feed\nData: {self._data}")
-            return
-
-        for _ in self:
-            pass
+        return data_series
 
     def add_indicators(self, indicators: list[Indicator]) -> None:
         """

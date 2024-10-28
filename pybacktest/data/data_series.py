@@ -1,8 +1,9 @@
 import pandas as pd
 
+
 class DataSeries(object):
     row: pd.Series
-    
+
     def __init__(self, row: pd.Series):
         """
         Initializes a DataSeries wrapper around a single row in the DataFeed.
@@ -20,17 +21,29 @@ class DataSeries(object):
         try:
             value = self.row[(symbol, column)]
             if isinstance(value, pd.Series):
-                raise ValueError(f"Expected a scalar value, but got a Series for symbol '{symbol}' and column '{column}'.")
+                raise ValueError(
+                    f"Expected a scalar value, but got a Series for symbol '{symbol}' and column '{column}'."
+                )
             return float(value)
         except KeyError:
             raise KeyError(f"Column '{column}' for symbol '{symbol}' does not exist.")
+
+    def get_all(self, symbol: str) -> pd.Series:
+        """
+        Returns all values for a specific stock at this timeframe.
+        :param symbol: The stock symbol (e.g., 'AAPL').
+        :return: A Series with all values for the stock at this timeframe.
+        """
+        series = self.row[symbol]
+        series.name = symbol
+        return series
 
     def all_symbols(self):
         """
         Returns all symbols available in this DataSeries.
         """
         return self.row.index.get_level_values(0).unique()
-    
+
     def all_columns(self):
         """
         Returns all column types available in this DataSeries.
