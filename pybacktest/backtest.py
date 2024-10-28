@@ -51,24 +51,49 @@ class Backtest(object):
         roi = (
             total_portfolio_value - self._portfolio.initial_cash
         ) / self._portfolio.initial_cash
+        avg_roi_per_year = roi / (
+            (self._data_feed.end_date - self._data_feed.start_date).days / 365
+        )
         logger.info("Backtest completed.")
 
-        # Prepare results dictionary
         results = {
             "run_id": str(uuid.uuid4()),
             "timestamp": datetime.now().isoformat(),
-            "initial_balance": self._portfolio.initial_cash,
-            "final_balance": self._portfolio.cash,
-            "total_portfolio_value": total_portfolio_value,
-            "roi": roi,
+            "results": {
+                "initial_balance": self._portfolio.initial_cash,
+                "final_balance": self._portfolio.cash,
+                "total_portfolio_value": total_portfolio_value,
+                "roi": roi,
+                "avg_roi_per_year": avg_roi_per_year,
+            },
+            "backtest_info": {
+                "duration": {
+                    "days": (
+                        self._data_feed.end_date - self._data_feed.start_date
+                    ).days,
+                    "years": (
+                        self._data_feed.end_date - self._data_feed.start_date
+                    ).days
+                    / 365,
+                    "date_range": {
+                        "start": self._data_feed.start_date,
+                        "end": self._data_feed.end_date,
+                    },
+                },
+                "symbols": {
+                    "count": len(self._data_feed.symbols),
+                    "list": self._data_feed.symbols,
+                },
+            },
+            "portfolio": {
+                "transaction_history": self._portfolio.transaction_history,
+                "final_positions": self._portfolio.positions,
+            },
             # "total_return": performance_metrics.get("total_return"),
             # "symbols": self._data_feed.symbols,
-            # "date_range": {"start": self._data_feed.start, "end": self._data_feed.end},
             "strategy": [
                 strategy.as_dict() for strategy in self._data_feed._subscribers
             ],
-            "transaction_history": self._portfolio.transaction_history,
-            "final_positions": self._portfolio.positions,
             "data_hash": hash(self._data_feed._data.to_csv()),
         }
 
@@ -93,9 +118,9 @@ class Backtest(object):
         plot_backtest(self._data_feed._data, run_filepath)
         logger.info(f"Run saved as {run_filepath}")
 
-        print(f"Total Portfolio Value: ${results['total_portfolio_value']:.2f}")
-        print(f"Final Cash: ${results['final_balance']:.2f}")
-        print(f"Return on Investment: {roi:.2%}")
+        print(f"Total Portfolio Value: ${results['results']['total_portfolio_value']}")
+        print(f"ROI: {results['results']['roi']:.2%}")
+        print(f"Average ROI per Year: {results['results']['avg_roi_per_year']:.2%}")
 
     def buy(self, symbol: str, amount: float, price: float) -> None:
         self._portfolio.buy(symbol, amount, price)
