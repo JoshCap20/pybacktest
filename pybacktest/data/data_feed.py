@@ -1,8 +1,6 @@
 import logging
 import pandas as pd
 
-
-from .utils import export_to_json
 from .data_series import DataSeries
 from ..strategies.strategy import Strategy
 from ..indicators.indicator import Indicator
@@ -71,5 +69,4 @@ class DataFeed(object):
         Ends the data feed iteration.
         """
         logger.debug("Data feed iteration complete.")
-        export_to_json(self._data)
         raise StopIteration

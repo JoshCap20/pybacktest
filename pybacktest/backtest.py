@@ -76,7 +76,6 @@ class Backtest(object):
         run_filepath = f"backtest_runs/run_{results['run_id']}"
 
         data = self._data_feed._data.copy()
-        print(data)
         data.columns = ["_".join(map(str, col)).strip() for col in data.columns.values]
         data = data.replace([np.nan, np.inf, -np.inf], None)
         data.reset_index(inplace=True)

@@ -6,6 +6,7 @@ from .indicator import Indicator
 
 class OBVIndicator(Indicator):
     def init(self, column: str = "Close"):
+        super().__init__()
         self.column = column
         self.indicator_name = "OBV"
         self.column_names.extend([self.indicator_name])

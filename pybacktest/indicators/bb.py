@@ -5,6 +5,7 @@ from .indicator import Indicator
 
 class BollingerBands(Indicator):
     def __init__(self, window: int = 20, num_std_dev: float = 2, column: str = "Close"):
+        super().__init__()
         self.window = window
         self.num_std_dev = num_std_dev
         self.column = column

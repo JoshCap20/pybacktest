@@ -6,6 +6,7 @@ from .indicator import Indicator
 
 class ADXIndicator(Indicator):
     def __init__(self, window: int = 14):
+        super().__init__()
         self.window = window
         self.indicator_name = f"ADX_{self.window}"
         self.column_names.append(self.indicator_name)

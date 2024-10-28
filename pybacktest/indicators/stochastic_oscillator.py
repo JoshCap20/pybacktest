@@ -5,6 +5,7 @@ from .indicator import Indicator
 
 class StochasticOscillator(Indicator):
     def __init__(self, k_window: int = 14, d_window: int = 3):
+        super().__init__()
         self.k_window = k_window
         self.d_window = d_window
 

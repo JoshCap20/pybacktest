@@ -5,6 +5,7 @@ from .indicator import Indicator
 
 class ATRIndicator(Indicator):
     def __init__(self, window: int = 14):
+        super().__init__()
         self.window = window
         self.indicator_name = f"ATR_{self.window}"
         self.column_names.append(self.indicator_name)
