@@ -8,7 +8,7 @@ import os
 ## JUST FOR SANITY CHECK CURRENTLY
 
 
-def plot_backtest(data: pd.DataFrame, output_filename: str):
+def plot_backtest(data: pd.DataFrame, output_filename: str, show_plot: bool = False):
     """
     Dynamically plots each stock's data from a MultiIndex DataFrame.
     For each stock, it plots the close price, volume, and separate subplots for indicators like MACD and RSI.
@@ -168,4 +168,6 @@ def plot_backtest(data: pd.DataFrame, output_filename: str):
         plt.tight_layout()
         os.makedirs(f"{output_filename}/plots", exist_ok=True)
         plt.savefig(f"{output_filename}/plots/{stock}.png", bbox_inches="tight")
-        plt.show()
+        if show_plot:
+            plt.show()
+        plt.close()

@@ -45,7 +45,10 @@ class YahooFinanceDataFeed(DataFeed):
             data = yf.download(symbols, start=start, end=end, group_by="ticker")
             data.to_csv(cache_path)
             logger.info(f"Fetched data from yfinance and saved to cache: {cache_path}")
-
+        except OSError as e:
+            logger.error(f"Error retrieving data: {e}")
+            logger.info(f"Fetched data from yfinance without caching")
+            return yf.download(symbols, start=start, end=end, group_by="ticker")
         if YahooFinanceDataFeed.validate_data(data):
             return data
         raise ValueError("YahooFinanceDataFeed: Data validation failed.")

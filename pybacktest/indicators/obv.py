@@ -6,7 +6,7 @@ from .indicator import Indicator
 
 class OBVIndicator(Indicator):
 
-    def init(self, column: str = "Adj Close"):
+    def __init__(self, column: str = "Adj Close"):
         super().__init__()
         self.column = column
         self.indicator_name = "OBV"

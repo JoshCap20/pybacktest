@@ -19,4 +19,4 @@ class BuyAction(Action):
         if quantity > 0:
             order = Order(symbol, quantity, price, "buy", timeframe)
             order.execute(portfolio)
-            self.log_action(symbol, quantity, price)
+            self.log_action(symbol, quantity, price, timeframe)
