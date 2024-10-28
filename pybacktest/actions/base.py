@@ -34,7 +34,7 @@ class Action:
 
         if order:
             order.execute(portfolio)
-            self.log_action(symbol, amount, price)
+            self.log_action(symbol, amount, price, timestamp)
         raise NotImplementedError("Implement the execute method in a subclass")
 
     def calculate_quantity(self, portfolio: Portfolio, price: float) -> float:
@@ -42,8 +42,12 @@ class Action:
         quantity = allocation // price
         return quantity
 
-    def log_action(self, symbol: str, amount: float, price: float):
-        logger.info(f"{self.action_type} {amount} shares of {symbol} at {price}")
+    def log_action(
+        self, symbol: str, amount: float, price: float, timestamp: pd.Timestamp
+    ) -> None:
+        logger.info(
+            f"{timestamp}: {self.action_type} {amount} shares of {symbol} at {price}"
+        )
 
     def __str__(self):
         return self.action_type

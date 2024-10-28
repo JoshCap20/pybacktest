@@ -122,7 +122,7 @@ Predicates use indicators, comparison operators, and values to return a boolean.
 Example Predicate:
 
 ```python
-from pybacktest.predicates import Predicate
+from pybacktest.strategies import Predicate
 import operator
 
 sma_below_ema = Predicate(
@@ -214,12 +214,12 @@ data_feed.add_indicators([sma_indicator, ema_indicator])
 
 ### Predicates API
 
-Predicates evaluate conditions based on indicators or specific values.
+Predicates evaluate conditions based on indicators or specific values. This should be intuitive: in order to take an action, whether buy or sell, there must be some definite condition to encapsulate that logic. Predicates are the way to do that.
 
 Predicate Class:
 
 ```python
-from pybacktest.predicates import Predicate
+from pybacktest.strategies import Predicate
 
 predicate = Predicate(
         input1=indicator_or_value,
@@ -247,7 +247,37 @@ rsi_below_70 = Predicate(
         operator=operator.lt,
         input2=70  # Comparing RSI value to 70
 )
+
+vwamp_above_price = Predicate(
+    input1=IndicatorInput(vwamp_indicator, column_name=vwamp_indicator.indicator_name),
+    operator=operator.gt,
+    input2="Adj Close",
+)
+
+sma_above_ema = Predicate(
+    input1=sma_indicator,
+    operator=operator.gt,
+    input2=ema_indicator,
+)
 ```
+
+#### Predicate Extension via Bitwise Operators
+
+To make using predicates even easier, you can use the following bitwise operators to extend the functionality of the `Predicate` class:
+
+- `&` (and)
+- `|` (or)
+- `~` (not)
+
+```python
+# Example of combining predicates
+combined_predicate = rsi_below_70 & sma_above_ema
+
+# Example of negating a predicate
+rsi_above_70 = ~rsi_below_70
+```
+
+**These are brand new and in testing stages. Please report any issues you may encounter.**
 
 ### Strategies API
 
@@ -365,8 +395,7 @@ This strategy buys when the SMA crosses below the EMA and sells when the SMA cro
 ```python
 from pybacktest import Backtest, YahooFinanceDataFeed
 from pybacktest.indicators import SMAIndicator, EMAIndicator
-from pybacktest.predicates import Predicate
-from pybacktest.strategies import Strategy
+from pybacktest.strategies import Predicate, Strategy
 from pybacktest.actions import BuyAction, SellAction
 import operator
 
@@ -410,10 +439,57 @@ data_feed.subscribe(strategy)
 # Create and run backtest
 backtest = Backtest(data_feed, initial_balance=10000)
 backtest.run()
+```
 
-# Get results
-final_portfolio_value = backtest.get_final_portfolio_value()
-print(f"Final Portfolio Value: ${final_portfolio_value:.2f}")
+### Strategy Demo: VWAMP and Price Crossover
+
+This strategy buys when the SMA crosses below the EMA and sells when the SMA crosses above the EMA.
+
+```python
+from pybacktest import Backtest, YahooFinanceDataFeed
+from pybacktest.indicators import VWAPIndicator
+from pybacktest.strategies import Predicate, Strategy, IndicatorInput
+from pybacktest.actions import BuyAction, SellAction
+from pybacktest.data.stock_groups import SPY_500
+import operator
+
+# Fetch data
+symbols = SPY_500
+data_feed = YahooFinanceDataFeed(symbols, start="2020-01-01", end="2020-12-01")
+
+# Add indicators
+vwamp_indicator = VWAPIndicator(column="Adj Close")
+data_feed.add_indicators([vwamp_indicator])
+
+# Define predicates
+# Note: When an indicator has multiple column names, one must be explicitly specified via an IndicatorInput object
+vwamp_above_price = Predicate(
+    input1=IndicatorInput(vwamp_indicator, column_name=vwamp_indicator.indicator_name),
+    operator=operator.gt,
+    input2="Adj Close",
+)
+
+# We can use the overridden operators to negate predicates
+vwamp_below_price = ~vwamp_above_price
+
+# Define actions
+buy_action = BuyAction()
+sell_action = SellAction()
+
+# Define strategy
+strategy = Strategy(
+    entry_conditions=[vwamp_above_price],
+    entry_action=buy_action,
+    exit_conditions=[vwamp_below_price],
+    exit_action=sell_action,
+)
+
+# Subscribe strategy to data feed
+data_feed.subscribe(strategy)
+
+# Create and run backtest
+backtest = Backtest(data_feed, initial_balance=10000)
+backtest.run()
 ```
 
 ## Advanced Usage
@@ -483,4 +559,3 @@ Contributions are welcome! If you'd like to contribute to PyBacktest, please fol
 1. Fork the repository.
 2. Create a new branch for your feature or bugfix.
 3. Submit a pull request with a detailed description of your changes.
-

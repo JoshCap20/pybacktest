@@ -26,7 +26,7 @@ class BacktestHelper:
         portfolio = self.backtest._portfolio
         initial_cash = portfolio.initial_cash
         final_cash = portfolio.cash
-        final_prices = self.backtest.get_final_prices()
+        final_prices = self.get_final_prices()
         total_portfolio_value = portfolio.total_portfolio_value(final_prices)
         roi = (total_portfolio_value - initial_cash) / initial_cash
         duration_days = (
@@ -51,7 +51,7 @@ class BacktestHelper:
 
     def calculate_returns(self):
         data = self.backtest._data_feed._data.copy()
-        data["Total_Portfolio_Value"] = self.backtest.calculate_portfolio_values()
+        data["Total_Portfolio_Value"] = self.calculate_portfolio_values()
         data["Returns"] = data["Total_Portfolio_Value"].pct_change().fillna(0)
         returns = data["Returns"]
         return returns
@@ -68,7 +68,7 @@ class BacktestHelper:
     def generate_results(self):
         self.calculate_performance_metrics()
         portfolio = self.backtest._portfolio
-        final_prices = self.backtest.get_final_prices()
+        final_prices = self.get_final_prices()
 
         buy_trades = [t for t in portfolio.transaction_history if t["type"] == "buy"]
         sell_trades = [t for t in portfolio.transaction_history if t["type"] == "sell"]
@@ -81,9 +81,7 @@ class BacktestHelper:
             "total_buy_trades": len(buy_trades),
             "total_sell_trades": len(sell_trades),
             "final_positions": portfolio.positions,
-            "final_positions_value": self.backtest.get_final_positions_value(
-                final_prices
-            ),
+            "final_positions_value": self.get_final_positions_value(final_prices),
             "transaction_history": portfolio.transaction_history,
         }
         self.results["backtest_info"] = {
@@ -115,6 +113,68 @@ class BacktestHelper:
 
     def get_results(self):
         return self.results
+
+    def get_final_prices(self) -> dict:
+        # Extract final prices from the data feed
+        final_prices = {}
+        last_row = self.backtest._data_feed._data.iloc[-1]
+        for symbol in last_row.index.get_level_values(0).unique():
+            final_prices[symbol] = last_row[(symbol, "Close")]
+        return final_prices
+
+    def get_final_positions_value(self, price_data: dict) -> float:
+        return sum(
+            [
+                amount * price_data.get(symbol, 0)
+                for symbol, amount in self.backtest._portfolio.positions.items()
+            ]
+        )
+
+    def calculate_portfolio_values(self):
+        data = self.backtest._data_feed._data.copy()
+        portfolio_values = []
+        cash_balances = []
+        portfolio = self.backtest._portfolio
+
+        cash_balance = portfolio.initial_cash
+        positions = {}
+
+        portfolio_value_df = pd.DataFrame(index=data.index)
+
+        for index, row in data.iterrows():
+            date = row.name
+            transactions = [
+                t for t in portfolio.transaction_history if t["timestamp"] == date
+            ]
+            for t in transactions:
+                symbol = t["symbol"]
+                quantity = t["quantity"] if t["type"] == "buy" else -t["quantity"]
+                positions[symbol] = positions.get(symbol, 0) + quantity
+                cost = (
+                    t["quantity"]
+                    * t["price"]
+                    * (
+                        1 + portfolio.brokerage_fee
+                        if t["type"] == "buy"
+                        else 1 - portfolio.brokerage_fee
+                    )
+                )
+                if t["type"] == "buy":
+                    cash_balance -= cost
+                else:
+                    cash_balance += cost
+
+            position_value = sum(
+                positions.get(symbol, 0) * row[(symbol, "Close")]
+                for symbol in positions
+            )
+            total_value = cash_balance + position_value
+            portfolio_values.append(total_value)
+            cash_balances.append(cash_balance)
+
+        data["Total_Portfolio_Value"] = portfolio_values
+        data["Cash_Balance"] = cash_balances
+        return data["Total_Portfolio_Value"]
 
 
 class NumpyEncoder(json.JSONEncoder):

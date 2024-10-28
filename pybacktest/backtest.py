@@ -50,7 +50,16 @@ class Backtest(object):
         # Print summary
         results = self.helper.get_results()
         performance = results["performance"]
-        print(f"Total Portfolio Value: ${performance['total_portfolio_value']:.2f}")
-        print(f"ROI: {performance['roi']:.2%}")
-        print(f"Average ROI per Year: {performance['avg_roi_per_year']:.2%}")
-        print(f"Sharpe Ratio: {performance['sharpe_ratio']:.4f}")
+        logger.info(
+            f"""
+                    Backtest Results:
+                    Initial Balance: {performance['initial_balance']:.2f}
+                    Final Balance: {performance['final_balance']:.2f}
+                    Total Portfolio Value: {performance['total_portfolio_value']:.2f}
+                    ROI: {performance['roi']*100:.2f}%
+                    Avg ROI per Year: {performance['avg_roi_per_year']*100:.2f}%
+                    Sharpe Ratio: {performance['sharpe_ratio']}
+                    Duration (Days): {performance['duration_days']}
+                    Duration (Years): {performance['duration_years']}
+                    """
+        )

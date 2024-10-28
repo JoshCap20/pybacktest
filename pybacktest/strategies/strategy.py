@@ -26,7 +26,7 @@ class Strategy:
             context["symbol"] = symbol
             if all(cond.test(symbol_data) for cond in self.entry_conditions):
                 self.entry_action.execute(symbol_data, context)
-            elif all(cond.test(symbol_data) for cond in self.exit_conditions):
+            elif any(cond.test(symbol_data) for cond in self.exit_conditions):
                 self.exit_action.execute(symbol_data, context)
 
     def __str__(self):
