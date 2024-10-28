@@ -1,9 +1,12 @@
-import json
-import uuid
-import numpy as np
-from datetime import datetime
-import logging
 import os
+import json
+from pdb import run
+import uuid
+import logging
+import numpy as np
+import pandas as pd
+from datetime import datetime
+
 
 from .data import DataFeed
 from .portfolio import Portfolio
@@ -66,17 +69,20 @@ class Backtest(object):
         }
 
         os.makedirs("backtest_runs", exist_ok=True)
-        run_filename = f"backtest_runs/run_{results['run_id']}.json"
+        run_filepath = f"backtest_runs/run_{results['run_id']}"
 
         data = self._data_feed._data.copy()
         data.columns = ["_".join(map(str, col)).strip() for col in data.columns.values]
         data = data.replace([np.nan, np.inf, -np.inf], None)
         results["data"] = data.to_dict(orient="records")
+        results["performance"] = self.get_results()
 
-        with open(run_filename, "w") as f:
+        os.makedirs(run_filepath, exist_ok=True)
+        with open(f"{run_filepath}/backtest.json", "w") as f:
             json.dump(results, f, cls=NumpyEncoder, indent=4)
 
-        logger.info(f"Results saved to {run_filename}")
+        plot_backtest(self._data_feed._data, run_filepath)
+        logger.info(f"Run saved as {run_filepath}")
 
     def buy(self, symbol: str, amount: float, price: float) -> None:
         self._portfolio.buy(symbol, amount, price)

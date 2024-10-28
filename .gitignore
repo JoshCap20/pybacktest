@@ -1,2 +1,4 @@
 *.pyc
 .vscode/
+data_cache/
+backtest_runs/

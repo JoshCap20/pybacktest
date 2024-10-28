@@ -1,3 +1,4 @@
+import os
 import yfinance as yf
 import pandas as pd
 from typing import Union, List
@@ -33,18 +34,17 @@ class YahooFinanceDataFeed(DataFeed):
         """
         Fetches data from Yahoo Finance for one or multiple symbols.
         """
-        cache_filename = f"data_cache_{symbols}_{start}_{end}.csv"
+        cache_dir = "data_cache/"
+        cache_filename = f"{symbols}_{start}_{end}.csv"
+        cache_path = cache_dir + cache_filename
+        os.makedirs(cache_dir, exist_ok=True)
         try:
-            data = pd.read_csv(
-                cache_filename, index_col=0, header=[0, 1], parse_dates=True
-            )
-            logger.info(f"Loaded data from cache: {cache_filename}")
+            data = pd.read_csv(cache_path, index_col=0, header=[0, 1], parse_dates=True)
+            logger.info(f"Loaded data from cache: {cache_path}")
         except FileNotFoundError:
             data = yf.download(symbols, start=start, end=end, group_by="ticker")
-            data.to_csv(cache_filename)
-            logger.info(
-                f"Fetched data from yfinance and saved to cache: {cache_filename}"
-            )
+            data.to_csv(cache_path)
+            logger.info(f"Fetched data from yfinance and saved to cache: {cache_path}")
 
         if YahooFinanceDataFeed.validate_data(data):
             return data
