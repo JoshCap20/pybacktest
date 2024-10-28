@@ -33,7 +33,18 @@ class YahooFinanceDataFeed(DataFeed):
         """
         Fetches data from Yahoo Finance for one or multiple symbols.
         """
-        data = yf.download(symbols, start=start, end=end, group_by="ticker")
+        cache_filename = f"data_cache_{symbols}_{start}_{end}.csv"
+        try:
+            data = pd.read_csv(
+                cache_filename, index_col=0, header=[0, 1], parse_dates=True
+            )
+            logger.info(f"Loaded data from cache: {cache_filename}")
+        except FileNotFoundError:
+            data = yf.download(symbols, start=start, end=end, group_by="ticker")
+            data.to_csv(cache_filename)
+            logger.info(
+                f"Fetched data from yfinance and saved to cache: {cache_filename}"
+            )
 
         if YahooFinanceDataFeed.validate_data(data):
             return data
